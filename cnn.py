@@ -8,7 +8,8 @@ print '.............Data Loaded...............'
 # %% Load Data
 
 #Variable Initialization
-mini_batch = 300000
+mini_batch = 400
+mini_batch_size = 2000
 input_num_units = 23
 output_num_units = 1
 #epoch = 1000
@@ -69,7 +70,9 @@ fc1 = tf.contrib.layers.fully_connected(P, 50, activation_fn =tf.nn.leaky_relu)
 fc2 = tf.contrib.layers.fully_connected(fc1, 20, activation_fn = tf.nn.leaky_relu)
 fc3 = tf.contrib.layers.fully_connected(fc2, output_num_units, activation_fn = tf.nn.softmax)
 output_layer = fc3
-cost = tf.losses.softmax_cross_entropy(tf_exp_y, output_layer)
+#cost = tf.losses.softmax_cross_entropy(tf_exp_y, output_layer)
+cost = tf.nn.softmax_cross_entropy_with_logits(labels = tf_exp_y, logits=output_layer)
+cost = tf.reduce_sum(cost)
 optimizer = tf.train.AdamOptimizer()
 train_op = optimizer.minimize(cost)
 print '...................CNN created...................'
@@ -79,11 +82,15 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     print('...............Starting To Run...............')
     for i in range(mini_batch):
-        I_train = dat[i*100:(i+1)*100,0:23]
-        Z_train = dat[i*100:(i+1)*100,23]
-        _,c = sess.run([train_op,cost], {tf_x: I_train, tf_exp_y: Z_train})
+        I_train = dat[i*mini_batch_size:(i+1)*mini_batch_size,0:23]
+        Z_train = dat[i*mini_batch_size:(i+1)*mini_batch_size,23]
+        _,op,c = sess.run([train_op,fc3,cost], {tf_x: I_train, tf_exp_y: Z_train})
         cost_plot = np.append(cost_plot,c)
         print(i, "T_Cost:%.4f" %c)
+        if (np.sum(Z_train)>0):
+            print "YEAH"
+            print("Expected Output",np.sum(Z_train))
+            print("Actual Output",np.sum(op))     
     # To plot Cost w.r.t time
 #    f, axarr = plt.subplots(2, sharex=True)
 #    axarr[0].plot(cost_plot)
