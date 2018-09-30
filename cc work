@@ -1,0 +1,14 @@
+import matplotlib.pyplot as plt 
+from numpy import genfromtxt
+import pandas as pd
+import numpy as np
+dat = genfromtxt('chb21_19.csv',dtype =(float), delimiter=',')
+M = len(dat)
+N = len(dat[0])
+b = np.zeros((M,N+1))
+b[:,:-1] = dat
+b[329728-1:344064-1 , -1] = 1 
+df = pd.DataFrame(b)
+df.to_csv("file_a01.csv",header = None ,index = False)
+#checking whether it is working
+print(dat[0,0])
