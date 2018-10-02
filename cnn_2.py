@@ -3,7 +3,7 @@ import tensorflow as tf
 from numpy import genfromtxt
 import matplotlib.pyplot as plt 
 dat = genfromtxt('chb_01_4.csv',dtype =(float), delimiter=',')
-dat = np.expand_dims(dat, axis=0) #MAke sure that the dimension is added in the beginning
+dat = np.expand_dims(dat, axis=0) #MAke sure that the dimension is added in the beginning___> yes it is added in the begining
 print ('.............Data Loaded...............')
 
 # %% Load Data
@@ -21,12 +21,12 @@ n_channels = 23
 inputs_ = tf.placeholder(tf.float32, [None, seq_len, n_channels], name = 'inputs') #As per RAvikanths Explanation for conv1D should that NOne be converted to 1
 #always??
 labels_ = tf.placeholder(tf.float32, [None, 1], name = 'labels')
-keep_prob_ = tf.placeholder(tf.float32, name = 'keep') #Why to keep this variable as tf variable?
-learning_rate_ = tf.placeholder(tf.float32, name = 'learning_rate') #SAme question as above
+keep_prob_ = tf.placeholder(tf.float32, name = 'keep') #Why to keep this variable as tf variable_------> no need variable is also enough if we are fixed with one prob...for debugging if we want to change the placeholder serves more purpose
+learning_rate_ = tf.placeholder(tf.float32, name = 'learning_rate') #SAme question as above--->same as above
 	
 
 # (batch, 4096, 28) --> (batch, 2048, 56)
-#What about the 3rd dimension for conv 1 Will it automatically figure it out?
+#What about the 3rd dimension for conv 1 Will it automatically figure it out?-------------yes it will figure it out u can visualise it in pic that i had send to u
 conv1 = tf.layers.conv1d(inputs=inputs_, filters=56, kernel_size=2, strides=1, 
                              padding='same', activation = tf.nn.relu)
 max_pool_1 = tf.layers.max_pooling1d(inputs=conv1, pool_size=2, strides=2, padding='same')
@@ -66,7 +66,7 @@ optimizer = tf.train.AdamOptimizer().minimize(cost)
 print '...................CNN created...................'
 
 
-#STUDY the difference between tf.nn and tf.layers
+
 # %% Training
 # Accuracy
 #correct_pred = tf.equal((output_layer, labels_))#Argmax will be deprecated
@@ -80,9 +80,9 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     iteration = 1
     for i in range(batch_size):
-        I_train = dat[:,i*seq_len:(i+1)*seq_len,:-1]  #MEaning of [:,...,...] SHouldnt it be [1,...,..]
-        X = dat[i*seq_len:(i+1)*seq_len, -1] #SHouldnt we reduce the dimension from 3D to 2d?
-        Z_train = X.T #IS it reallyt transpose? and why are we taking the transpose?
+        I_train = dat[:,i*seq_len:(i+1)*seq_len,:-1]  #MEaning of [:,...,...] SHouldnt it be [1,...,..]---> any thing is no problem
+        X = dat[i*seq_len:(i+1)*seq_len, -1] #SHouldnt we reduce the dimension from 3D to 2d? ----> no
+        Z_train = X.T #IS it reallyt transpose? and why are we taking the transpose? -> yes it is transpose
         feed = {inputs_ : I_train, labels_ : Z_train, keep_prob_ : 0.5, learning_rate_ : learning_rate} #WE arent using drop
         loss, _  = sess.run([cost, optimizer], feed_dict = feed)
 #        train_acc.append(acc)
