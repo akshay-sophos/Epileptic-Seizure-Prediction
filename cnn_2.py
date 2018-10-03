@@ -21,7 +21,8 @@ n_channels = 23
 inputs_ = tf.placeholder(tf.float32, [None, seq_len, n_channels], name = 'inputs') #As per RAvikanths Explanation for conv1D should that NOne be converted to 1
 #always??
 labels_ = tf.placeholder(tf.float32, [None, 1], name = 'labels')
-keep_prob_ = tf.placeholder(tf.float32, name = 'keep') #Why to keep this variable as tf variable_------> no need variable is also enough if we are fixed with one prob...for debugging if we want to change the placeholder serves more purpose
+keep_prob_ = tf.placeholder(tf.float32, name = 'keep') #Why to keep this variable as tf variable_
+#------> no need variable is also enough if we are fixed with one prob...for debugging if we want to change the placeholder serves more purpose
 learning_rate_ = tf.placeholder(tf.float32, name = 'learning_rate') #SAme question as above--->same as above
 	
 
@@ -60,9 +61,40 @@ fc1 = tf.contrib.layers.fully_connected(P, 50, activation_fn =tf.nn.leaky_relu)
 fc2 = tf.contrib.layers.fully_connected(fc1, 20, activation_fn = tf.nn.leaky_relu)
 fc3 = tf.contrib.layers.fully_connected(fc2, 2, activation_fn = None)
 output_layer = fc3
-cost = tf.nn.softmax_cross_entropy_with_logits(labels = labels_, logits = output_layer)#This will be deprecated soon.SO find an alternative
-cost = tf.reduce_sum(cost)
-optimizer = tf.train.AdamOptimizer().minimize(cost)
+#cost = tf.nn.softmax_cross_entropy_with_logits(labels = labels_, logits = output_layer)#This will be deprecated soon.SO find an alternative
+#cost = tf.reduce_sum(cost)
+#optimizer = tf.train.AdamOptimizer().minimize(cost)
+
+
+
+
+    # Build the neural network
+    # Because Dropout have different behavior at training and prediction time, we
+    # need to create 2 distinct computation graphs that still share the same weights.
+#    logits_train = conv_net(features, num_classes, dropout, reuse=False,
+#                            is_training=True)
+#    logits_test = conv_net(features, num_classes, dropout, reuse=True,
+#                           is_training=False)
+#
+#    # Predictions
+#    pred_classes = tf.argmax(logits_test, axis=1)
+#    pred_probas = tf.nn.softmax(logits_test)
+#
+#    # If prediction mode, early return
+#    if mode == tf.estimator.ModeKeys.PREDICT:
+#        return tf.estimator.EstimatorSpec(mode, predictions=pred_classes)
+
+        # Define loss and optimizer
+loss_op = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=output_layer,labels=labels_))
+#logits_train, labels=tf.cast(labels, dtype=tf.int32)))
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+train_op = optimizer.minimize(loss_op,global_step=tf.train.get_global_step())
+
+#    # Evaluate the accuracy of the model
+#acc_op = tf.metrics.accuracy(labels=labels, predictions=pred_classes)
+
+
+
 print '...................CNN created...................'
 
 
@@ -94,9 +126,3 @@ with tf.Session() as sess:
     plt.plot(cost_plot)  
 plt.savefig('./Cost Plot CNN/cost.png')
 #saver.save(sess,"checkpoints-cnn/har.ckpt")
-
-	
-
-
-
-
