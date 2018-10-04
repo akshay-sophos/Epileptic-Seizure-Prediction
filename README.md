@@ -1,8 +1,10 @@
 # Epileptic-Seizure-Prediction
 Project on epileptic seizure prediction using Machine Learning on Signal Processing 
 
-cnn_det.py: We detect the area of epileptic seizures using CNN from a long EEG data.
+cnn_2.py: We detect the area of epileptic seizures using CNN from a long EEG data.
 
-rnn_predict.py: We predict the onset of epileptic seizures using RNN
+rnn_1.0.py: We detect the epileptic seizures using RNN
+
+csv_to_edf.m: Matlab file to convert edf to csv
 
 tf_test.py : To check whether tf is using GPU
