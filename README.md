@@ -9,4 +9,4 @@ csv_to_edf.m: Matlab file to convert edf to csv
 
 tf_test.py : To check whether tf is using GPU
 
-features time domain only.py : we will get the time domain features in an array 
+features timedomain + freqdomain.py : we will get the both domain features in an array 
