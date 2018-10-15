@@ -17,6 +17,7 @@ n_channels = 23
 
 #Initialize all the variables here
 
+#In
 
 inputs_ = tf.placeholder(tf.float32, [None, seq_len, n_channels], name = 'inputs') #As per RAvikanths Explanation for conv1D should that NOne be converted to 1
 #always??
@@ -59,7 +60,7 @@ max_pool_4 = tf.layers.max_pooling1d(inputs=conv4, pool_size=2, strides=2, paddi
 P = tf.contrib.layers.flatten(max_pool_4)
 fc1 = tf.contrib.layers.fully_connected(P, 50, activation_fn =tf.nn.leaky_relu)
 fc2 = tf.contrib.layers.fully_connected(fc1, 20, activation_fn = tf.nn.leaky_relu)
-fc3 = tf.contrib.layers.fully_connected(fc2, 2, activation_fn = None)
+fc3 = tf.contrib.layers.fully_connected(fc2, 1 , activation_fn = None)
 output_layer = fc3
 #cost = tf.nn.softmax_cross_entropy_with_logits(labels = labels_, logits = output_layer)#This will be deprecated soon.SO find an alternative
 #cost = tf.reduce_sum(cost)
@@ -85,11 +86,10 @@ output_layer = fc3
 #        return tf.estimator.EstimatorSpec(mode, predictions=pred_classes)
 
         # Define loss and optimizer
-loss_op = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=output_layer,labels=labels_))
+loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=output_layer,labels=labels_))
 #logits_train, labels=tf.cast(labels, dtype=tf.int32)))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-train_op = optimizer.minimize(loss_op,global_step=tf.train.get_global_step())
-
+train_op = optimizer.minimize(loss_op)#,global_step=tf.train.get_global_step())
 #    # Evaluate the accuracy of the model
 #acc_op = tf.metrics.accuracy(labels=labels, predictions=pred_classes)
 
@@ -116,7 +116,7 @@ with tf.Session() as sess:
         X = dat[i*seq_len:(i+1)*seq_len, -1] #SHouldnt we reduce the dimension from 3D to 2d? ----> no
         Z_train = X.T #IS it reallyt transpose? and why are we taking the transpose? -> yes it is transpose
         feed = {inputs_ : I_train, labels_ : Z_train, keep_prob_ : 0.5, learning_rate_ : learning_rate} #WE arent using drop
-        loss, _  = sess.run([cost, optimizer], feed_dict = feed)
+        loss, _  = sess.run([loss_op, train_op], feed_dict = feed)
 #        train_acc.append(acc)
         train_loss.append(loss)
         if (iteration % 5 == 0):
