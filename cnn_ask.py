@@ -14,8 +14,9 @@ seq_len = 4096
 learning_rate = 0.001
 n_classes = 2
 n_channels = 23
+window = batch_size/2
 X = tf.placeholder(tf.float32, [None,seq_len,n_channels], name = 'Input') #The 1st None is batch_size
-Y = tf.placeholder(tf.float32, [None, 1], name = 'Expected_Output')
+Y = tf.placeholder(tf.float32, [None,seq_len,1], name = 'Expected_Output')
 
 # (batch, 4096, 28) --> (batch, 2048, 56)
 conv1 = tf.layers.conv1d(inputs=X, filters=56, kernel_size=2, strides=1,padding='same', activation = tf.nn.relu)
@@ -93,19 +94,21 @@ print ('...................CNN created...................')
 train_acc = []
 train_loss = []
 n = 1
+I_train = dat[:,0*seq_len:(0+1)*seq_len,:-1]
+Z_train = dat[0*seq_len:(0+1)*seq_len, -1].T
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for m in range(epoch):
-        I_train = []
-        Z_train = []
         for i in range(n,n+batch_size):
             I_train = np.vstack([I_train,dat[:,i*seq_len:(i+1)*seq_len,:-1]])
             Z_train = np.vstack([Z_train,dat[i*seq_len:(i+1)*seq_len, -1].T])
-        n += batch_size/2
+        n += window
         feed = {X : I_train, Y : Z_train}
         loss, _  = sess.run([loss_op, train_op], feed_dict = feed)
         train_loss.append(loss)
         print("Iteration: {:d}".format(epoch),"Train loss: {:6f}".format(loss))#,"Train acc: {:.6f}".format(acc))
+        I_train = np.delete(I_train,np.s_[0:-1],axis=0)
+        Z_train = np.delete(Z_train,np.s_[0:-1],axis=0)
     plt.plot(cost_plot)
 plt.savefig('./Cost Plot CNN/cost.png')
 #saver.save(sess,"checkpoints-cnn/har.ckpt")
