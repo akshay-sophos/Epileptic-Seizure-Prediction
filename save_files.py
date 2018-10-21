@@ -25,6 +25,6 @@ while j<(numcols-1):
  print(j)
 print("Saving")
 
-np.save('./X'+title+'.npy', X)
-np.save('./Yp'+title+'.npy', yp)
-np.save('./Yd'+title+'.npy', yd)
+np.save('./Matrix/X'+title+'.npy', X)
+np.save('./Matrix/Yp'+title+'.npy', yp)
+np.save('./Matrix/Yd'+title+'.npy', yd)
