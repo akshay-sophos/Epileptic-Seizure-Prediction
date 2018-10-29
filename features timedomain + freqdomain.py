@@ -99,7 +99,7 @@ def get_freq_domain_features(array2):
 x = [1,1,1,1,13,3,3,3,3,5,5,5,5,7,7,77,7]
 y = get_ht_or_as(x,2)
 k = get_ht_or_as(x,1)
-l = get_time_domain_features(x)
+l = get_time_domain_features(k)
 z = get_freq_domain_features(y)
 print(l)
 print(z)
