@@ -8,8 +8,8 @@ dat = genfromtxt('chb_01_4.csv',dtype =(float), delimiter=',')
 print ('.............Data Loaded...............')
 
 TF_LEARN_RATE = 0.005 #Learning Rate for Gradient Descent
-ep = 375000
-NUM_EPISODES = 10000+ep
+ep = 9200#375000
+NUM_EPISODES = 50000+ep
 SEQ_LEN = 100
 PLOT_APPEND = 10
 cost_plot = []
@@ -28,7 +28,8 @@ hidden_layer1 = tf.layers.dense(tf_x, hidden_num_units1, tf.nn.tanh)
 hidden_layer2 = tf.layers.dense(hidden_layer1, hidden_num_units2, tf.nn.relu)
 hidden_layer3 = tf.layers.dense(hidden_layer2, hidden_num_units3, tf.nn.relu)
 output_layer = tf.layers.dense(hidden_layer3, output_num_units)
-cost = tf.losses.sparse_softmax_cross_entropy(tf_exp_y,output_layer)
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels = tf_exp_y,logits=output_layer))
+#cost = tf.losses.sparse_softmax_cross_entropy(tf_exp_y,output_layer)
 optimizer = tf.train.AdamOptimizer()
 train_op = optimizer.minimize(cost)
 print ('...................NN created...................')
