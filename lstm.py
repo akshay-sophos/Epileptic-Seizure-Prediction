@@ -1,14 +1,15 @@
 import numpy as np
 from numpy import genfromtxt
-#dat = genfromtxt('chb_01_4.csv',dtype =(float), delimiter=',')
-dat = np.random.rand(30,24)>0.5
+dat = genfromtxt('chb_01_4.csv',dtype =(float), delimiter=',')
+#dat = np.random.rand(30,24)>0.5
 print('............Data Loaded.................')
 
 #Variable Declaration
 THRESHOLD = 0.5
 p_dropout = 0.2
-batch_size= 10
-epoch     = 100
+batch_size= 5000
+valid_split = 0
+epoch     = 5
 hip       = 23
 h1        = 60
 h2        = 60
@@ -66,11 +67,11 @@ classifier.add(Dense(units =hop, use_bias=True,init = 'uniform', activation = 's
 #Compiling the ANN
 classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
 #Fitting the ANN to the training set
-history = classifier.fit(X_train, y_train, validation_split=0.33, batch_size = batch_size, epochs = epoch, verbose=0)
+history = classifier.fit(X_train, y_train, validation_split=valid_split, batch_size = batch_size, epochs = epoch, verbose=1)
 print('............Data Trained................')
 
 # Predicting the Test set results
-y_pred = classifier.predict(X_train)
+y_pred = classifier.predict(X_train,verbose=1)
 y_pred = (y_pred > THRESHOLD).astype(float)
 y_pred = y_pred.reshape(np.size(y_pred))
 y_train = y_train.reshape(np.size(y_train))
@@ -84,7 +85,7 @@ print('............Test Over...................')
 
 
 # Predicting the Test set results
-y_pred = classifier.predict(X_test)
+y_pred = classifier.predict(X_test,verbose=1)
 y_pred = (y_pred > THRESHOLD).astype(float)
 y_pred = y_pred.reshape(np.size(y_pred))
 y_test = y_test.reshape(np.size(y_test))
@@ -98,10 +99,9 @@ print('............Test Over...................')
 
 #%%
 plot_model(classifier, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
-ann_viz(classifier, view=True, filename='net.gv', title='Neural Network')
 # Plot training & validation accuracy values
 plt.plot(history.history['acc'])
-plt.plot(history.history['val_acc'])
+#plt.plot(history.history['val_acc'])
 plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
@@ -110,9 +110,11 @@ plt.show()
 
 # Plot training & validation loss values
 plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
+#plt.plot(history.history['val_loss'])
 plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.show()
+
+ann_viz(classifier, view=True, filename='net.gv', title='Neural Network')
