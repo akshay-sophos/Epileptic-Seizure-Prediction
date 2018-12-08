@@ -11,16 +11,17 @@ print('............Data Loaded.................')
 print(t2-t1)
 
 #Variable Declaration
-THRESHOLD = 0.7
+THRESHOLD = 0.5
 lambda_reg=0.001
+l_rate = 0.0003
 p_dropout = 0.1
-batch_size= 500
+batch_size= 1000
 valid_split = 0
-epoch     = 8
+epoch     = 10
 hip       = 23
 h1        = 20
-h2        = 20
-h3        = 20
+h2        = 10
+h3        = 10
 h4        = 30
 hop       = 1
 #%%
@@ -43,7 +44,7 @@ print('............Data Normalized.............')
 print(X_train.shape)
 print(y_train.shape)
 #%%
-from keras import regularizers
+from keras import regularizers,optimizers
 from keras.models import Sequential
 from keras.layers import Dense,Dropout,LSTM
 from keras.layers.normalization import BatchNormalization
@@ -67,9 +68,10 @@ classifier.add(LSTM(h3, return_sequences=True,use_bias=True,kernel_regularizer=r
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #Adding the output layer
-classifier.add(Dense(units =hop, use_bias=True,init = 'uniform', activation = 'sigmoid'))
+classifier.add(Dense(units =hop, use_bias=True, activation = 'sigmoid'))
 #Compiling the ANN
-classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+adam = optimizers.Adam(lr=l_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+classifier.compile(optimizer = adam, loss = 'binary_crossentropy', metrics = ['accuracy'])
 #Fitting the ANN to the training set
 history = classifier.fit(X_train, y_train, validation_split=valid_split, batch_size = batch_size, epochs = epoch, verbose=1)
 print('............Data Trained................')
