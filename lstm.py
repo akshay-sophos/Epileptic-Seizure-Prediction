@@ -11,8 +11,9 @@ print('............Data Loaded.................')
 print(t2-t1)
 
 #Variable Declaration
-THRESHOLD = 0.5
-p_dropout = 0.2
+THRESHOLD = 0.7
+lambda_reg=0.001
+p_dropout = 0.1
 batch_size= 500
 valid_split = 0
 epoch     = 8
@@ -42,6 +43,7 @@ print('............Data Normalized.............')
 print(X_train.shape)
 print(y_train.shape)
 #%%
+from keras import regularizers
 from keras.models import Sequential
 from keras.layers import Dense,Dropout,LSTM
 from keras.layers.normalization import BatchNormalization
@@ -53,19 +55,15 @@ import matplotlib.pyplot as plt
 
 classifier = Sequential()
 #Adding input layer and first hidden layer
-classifier.add(LSTM(h1,return_sequences=True, activation = 'relu',use_bias=True, input_shape = (None,hip)))
+classifier.add(LSTM(h1,return_sequences=True, activation = 'relu',use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg), input_shape = (None,hip)))
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #Adding second hidden layer
-classifier.add(LSTM(h2, return_sequences=True,use_bias=True,activation = 'relu'))
+classifier.add(LSTM(h2, return_sequences=True,use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg),activation = 'relu'))
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #Adding third hidden layer
-classifier.add(LSTM(h3, return_sequences=True,use_bias=True,activation = 'relu'))
-classifier.add(BatchNormalization())
-classifier.add(Dropout(p_dropout))
-#4th layer
-classifier.add(LSTM(h4, return_sequences=True,use_bias=True,activation = 'relu'))
+classifier.add(LSTM(h3, return_sequences=True,use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg),activation = 'relu'))
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #Adding the output layer
@@ -126,5 +124,3 @@ plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.show()
-
-#ann_viz(classifier, view=True, filename='net.gv', title='Neural Network')
