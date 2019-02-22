@@ -1,9 +1,6 @@
-
 import numpy as np
 import time
 import pandas as pd
-from keras.utils import to_categorical
-#from keras.metrics import confusion_matrix
 from keras import regularizers,optimizers
 from keras.models import Sequential
 from keras.layers import Dense,Dropout
@@ -27,33 +24,29 @@ hip       = 23      # Input of the neural network
 h1        = 30
 h2        = 30
 h3        = 20
-h4        = 30
-hop       = 3
-#%%
-FAILURE WITH F1 SCORE 20% ONLY
-#def f1score(y_true, y_pred):
-#    return keras.backend.(y_pred) 
+h4        = 10
+hop       = 1
 #%%
 #Should we use BatchNormalization before or after activation function??????
 classifier = Sequential()
 #Adding input layer and first hidden layer
-classifier.add(Dense(h1, activation = 'relu',use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg), input_shape = (None,hip)))
+classifier.add(Dense(h1,return_sequences=True, activation = 'relu',use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg), input_shape = (None,hip)))
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #Adding second hidden layer
-classifier.add(Dense(h2, use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg),activation = 'relu'))
+classifier.add(Dense(h2, return_sequences=True,use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg),activation = 'relu'))
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #Adding third hidden layer
-classifier.add(Dense(h3, use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg),activation = 'relu'))
+classifier.add(Dense(h3, return_sequences=True,use_bias=True,kernel_regularizer=regularizers.l2(lambda_reg),activation = 'relu'))
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #4th layer
-classifier.add(Dense(h4, use_bias=True,activation = 'relu'))
+classifier.add(Dense(h4, return_sequences=True,use_bias=True,activation = 'relu'))
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #Adding the output layer
-classifier.add(Dense(units =hop, use_bias=True, activation = 'softmax'))
+classifier.add(Dense(units =hop, use_bias=True, activation = 'sigmoid'))
 adam = optimizers.Adam(lr=l_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=l_rate_decay, amsgrad=False)
 #Compiling the ANN
 #%%
@@ -72,43 +65,40 @@ for i in sorted(file):
     print("Time for "+str(i[-6:-4])+" is "+str(t2-t1)+"sec")
 print('............Data Loaded.................')
 # %%
-df_y = to_categorical( dat[:,-1],num_classes=3)
-X_train, X_test, y_train, y_test = train_test_split(dat[:,:-2],df_y, test_size = 0.3, random_state = 0)
+X_train, X_test, y_train, y_test = train_test_split(dat[:,:-2], dat[:,-2], test_size = 0.3, random_state = 0)
 print('............Data Split..................')
-#%%
+
 sc = StandardScaler()
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 X_train = np.expand_dims(X_train, axis=1) 
 X_test = np.expand_dims(X_test, axis=1) 
 y_train = np.expand_dims(y_train, axis=1) 
-#y_train = np.expand_dims(y_train, axis=1) 
+y_train = np.expand_dims(y_train, axis=1) 
 y_test = np.expand_dims(y_test, axis=1) 
-#y_test = np.expand_dims(y_test, axis=1) 
+y_test = np.expand_dims(y_test, axis=1) 
 print('............Data Normalized.............')
 print(X_train.shape)
 print(y_train.shape)
 # %%
-classifier.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])#, f1_score])#, 'precision', 'recall'])
-#classifier.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
+classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
 #Fitting the ANN to the training set
 history = classifier.fit(X_train, y_train, validation_split=valid_split, batch_size = batch_size, epochs = epoch, verbose=1)
 print('............Data Trained................')
 # %%Predicting the Train set results
-score = classifier.evaluate(X_train, y_train, verbose=1)
-print('Test score:', score[0])
-print('Test accuracy:', score[1])
 y_pred = classifier.predict(X_train,verbose=1)
-#y_pred = (y_pred > THRESHOLD).astype(float)
-#y_pred = np.squeeze(y_pred)
-#y_train = np.squeeze(y_train)
+y_pred = (y_pred > THRESHOLD).astype(float)
+y_pred = np.squeeze(y_pred)
+y_train = np.squeeze(y_train)
+print(y_pred.shape,y_pred[1:10],"    ",y_train.shape,y_train[1:10])
+#
 #y_pred = y_pred.reshape(np.size(y_pred))
 #y_train = y_train.reshape(np.size(y_train))
 # Making the Confusion Matrix
-print(confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1),labels=[0,1,2]))
-#print("Precision",precision_score(y_train, y_pred,labels=[0,1,2]))
-#print("Recall",recall_score(y_train, y_pred,labels=[0,1,2]))
-#print("F1",f1_score(y_train, y_pred,labels=[0,1,2]))
+print(confusion_matrix(y_train,y_pred,labels=[0,1]))
+print("Precision",precision_score(y_train, y_pred,labels=[0,1]))
+print("Recall",recall_score(y_train, y_pred,labels=[0,1]))
+print("F1",f1_score(y_train, y_pred,labels=[0,1]))
 print('............Test Over...................')
 
 
