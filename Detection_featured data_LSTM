@@ -1,10 +1,9 @@
-
 import numpy as np
 import time
 import pandas as pd
 from keras import regularizers,optimizers
 from keras.models import Sequential
-from keras.layers import Dense,Dropout,CuDNNLSTM,LSTM,GRU
+from keras.layers import Dense,Dropout,CuDNNLSTM,LSTM,GRU,TimeDistributed,GlobalAveragePooling1D
 from keras.layers.normalization import BatchNormalization
 from keras.utils.vis_utils import plot_model
 import matplotlib.pyplot as plt
@@ -13,40 +12,43 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
 import glob
 #Variable Declaration
-THRESHOLD = 0.3    # Threshold for predicting seizure
+THRESHOLD = 0.4    # Threshold for predicting seizure
 lambda_reg = 0.1 # Lambda for regression
-l_rate = 0.01       # Learning rate for gradient descent
-l_rate_decay = 0.001  # Decay of learning rate over epoch
-p_dropout = 0.4     # Probability of dropout
+l_rate = 0.001       # Learning rate for gradient descent
+l_rate_decay = 3  # Decay of learning rate over epoch
+p_dropout = 0.5     # Probability of dropout
 batch_size= 10000 # Size of each batch
-valid_split = 0     # Size of validation
-epoch     = 30      # Epochs(meaning no of times we train the same data)
+valid_split = 0.2     # Size of validation
+epoch     = 300      # Epochs(meaning no of times we train the same data)
 hip       = 21      # Input of the neural network
 h1        = 30
 h2        = 30
 h3        = 30
-h4        = 20
+h4        = 30
 hop       = 1
+t = 23
 #%%
 
 classifier = Sequential()
 #Adding input layer and first hidden layer
-classifier.add(CuDNNLSTM(h1,return_sequences=True,kernel_regularizer=regularizers.l2(lambda_reg), input_shape = (None,hip)))
+classifier.add(CuDNNLSTM(h1,return_sequences=True,kernel_regularizer=regularizers.l2(lambda_reg), batch_input_shape = (None,t,hip)))
 classifier.add(BatchNormalization())
 classifier.add(Dropout(p_dropout))
 #Adding second hidden layer
-#classifier.add(CuDNNLSTM(h2, return_sequences=True,kernel_regularizer=regularizers.l2(lambda_reg),))
-#classifier.add(BatchNormalization())
-#classifier.add(Dropout(p_dropout))
+classifier.add(CuDNNLSTM(h2, return_sequences=True,kernel_regularizer=regularizers.l2(lambda_reg),))
+classifier.add(BatchNormalization())
+classifier.add(Dropout(p_dropout))
 ##Adding third hidden layer
 #classifier.add(CuDNNLSTM(h3, return_sequences=True,kernel_regularizer=regularizers.l2(lambda_reg),))
 #classifier.add(BatchNormalization())
 #classifier.add(Dropout(p_dropout))
 #4th layer
-classifier.add(Dense(h4))#, return_sequences=True,))
+classifier.add(TimeDistributed(Dense(h4)))#, return_sequences=True,))
 #classifier.add(BatchNormalization())
 #classifier.add(Dropout(p_dropout))
 #Adding the output layer
+classifier.add(GlobalAveragePooling1D())
+
 classifier.add(Dense(units =hop,  activation = 'sigmoid'))
 adam = optimizers.Adam(lr=l_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=l_rate_decay, amsgrad=False)#,clipvalue=0.5,clipnorm=1)
 #plot_model(classifier, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
@@ -68,23 +70,36 @@ for i in sorted(file):
     print("Time for "+str(i[-6:-4])+" is "+str(t2-t1)+"sec")
 print('............Data Loaded.................')
 # %%
-X_train, X_test, y_train, y_test = train_test_split(dat[:,:-3], dat[:,-2], test_size = 0.3, random_state = 0)
+X_train, X_test, y_train, y_test = train_test_split(dat[:,:-3], dat[:,-2], test_size = 0.2, random_state = 0)
 print('............Data Split..................')
 #%%
 sc = StandardScaler()
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
-X_train = np.expand_dims(X_train, axis=1) 
-X_test = np.expand_dims(X_test, axis=1) 
-y_train = np.expand_dims(y_train, axis=1) 
-y_train = np.expand_dims(y_train, axis=1) 
-y_test = np.expand_dims(y_test, axis=1) 
-y_test = np.expand_dims(y_test, axis=1) 
+a=np.shape(X_train)[0]/(23)
+b=np.shape(X_test)[0]/23
+X_train = X_train.reshape(int(a),23,21).astype('float32')
+X_test = X_test.reshape(int(b),23,21).astype('float32')
+#X_train = np.expand_dims(X_train, axis=1) 
+#X_test = np.expand_dims(X_test, axis=1) 
+y_train = np.expand_dims(y_train, axis=1)[0::23] 
+#y_train = np.expand_dims(y_train, axis=1) 
+#y_test = np.expand_dims(y_test, axis=1) 
+y_test = np.expand_dims(y_test, axis=1)[0::23] 
 print('............Data Normalized.............')
 print(X_train.shape)
 print(y_train.shape)
+#%%
+import keras.backend as K
+
+def wloss(y_true, y_pred):
+    if(y_true==1 and y_pred==0):
+        return K.binary_crossentropy(y_true,y_pred)*9.9
+    else:
+        return K.binary_crossentropy(y_true,y_pred)*0.1
+
 # %%
-classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+classifier.compile(optimizer = 'adam', loss = wloss, metrics = ['accuracy'])
 #Fitting the ANN to the training set
 history = classifier.fit(X_train, y_train, validation_split=valid_split, batch_size = batch_size, epochs = epoch, verbose=1)
 print('............Data Trained................')
